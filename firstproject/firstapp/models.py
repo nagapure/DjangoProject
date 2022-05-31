@@ -7,6 +7,20 @@ class Product(models.Model):
     product_name = models.CharField(max_length= 250)
     price = models.FloatField()
     
+    @classmethod
+    def updateprice(cls, product_id, price):
+        product = cls.objects.get(product_id=product_id)
+        product = product.first()
+        product.price = price
+        product.save()
+        return product
+    
+    @classmethod
+    def create(cls, product_name, price):
+        product = cls(product_name=product_name, price=price)
+        product.save()
+        return product
+    
     def __str__(self):
         return self.product_name
     
