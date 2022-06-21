@@ -1,6 +1,30 @@
+from time import timezone
 from django.db import models
 from django.contrib.auth.models import User
 # Create your models here.
+
+from django.contrib.auth.models import AbstractUser
+from django.utils.translation import ugettext_lazy as _
+from django.core.validators import RegexValidator
+from django.utils import timezone
+# from .managers import CustomUserManager
+
+
+class CustomUser(AbstractUser):
+    username = None
+    email = models.EmailField(_('email address'),unique=True)
+    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+    
+    # objects = CustomUserManager()
+    
+    # def__str__(self):
+    #     return self.email
+
+
+
+
 
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True)
@@ -78,3 +102,7 @@ class Order(models.Model):
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.IntegerField(choices=status_choices, default=1)
+    
+class Deal(models.Model):
+    user = models.ManyToManyField(User)
+    deal_name = models.CharField(max_length=250)
