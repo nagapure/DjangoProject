@@ -3,24 +3,28 @@ from django.db import models
 from django.contrib.auth.models import User
 # Create your models here.
 
-from django.contrib.auth.models import AbstractUser
-from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth.models import AbstractUser, AbstractBaseUser
+from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator
 from django.utils import timezone
-# from .managers import CustomUserManager
+from .managers import CustomUserManager
+from django.contrib.auth.models import PermissionsMixin
 
 
-class CustomUser(AbstractUser):
-    username = None
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    # username = None
     email = models.EmailField(_('email address'),unique=True)
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    date_joined = models.DateTimeField(default=timezone.now)
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
     
-    # objects = CustomUserManager()
+    objects = CustomUserManager()
     
-    # def__str__(self):
-    #     return self.email
+    def __str__(self):
+        return self.email
 
 
 
@@ -47,42 +51,49 @@ class Product(models.Model):
     
     def __str__(self):
         return self.product_name
- 
-class cart_manager(object):
-    def __init__(self, user):
-        self.user = user
-        self.cart = Cart.objects.filter(user=user)
-        if self.cart.count() == 0:
-            self.cart = Cart.create(user)
-        else:
-            self.cart = self.cart.first()
+
+
+class CartManager(models.Manager):
+    def create_cart(self, user):
+        cart = self.create(user=user)
+        return cart
     
-    def add_to_cart(self, product_id):
-        product = Product.objects.get(product_id=product_id)
-        self.cart.products.add(product)
-        self.cart.save()
-        return self.cart
     
-    def remove_from_cart(self, product_id):
-        product = Product.objects.get(product_id=product_id)
-        self.cart.products.remove(product)
-        self.cart.save()
-        return self.cart
+# class cart_manager(object):
+#     def __init__(self, user):
+#         self.user = user
+#         self.cart = Cart.objects.filter(user=user)
+#         if self.cart.count() == 0:
+#             self.cart = Cart.create(user)
+#         else:
+#             self.cart = self.cart.first()
     
-    def get_cart(self):
-        return self.cart
+#     def add_to_cart(self, product_id):
+#         product = Product.objects.get(product_id=product_id)
+#         self.cart.products.add(product)
+#         self.cart.save()
+#         return self.cart
     
-    def get_total(self):
-        total = 0
-        for product in self.cart.products.all():
-            total += product.price
-        return total
+#     def remove_from_cart(self, product_id):
+#         product = Product.objects.get(product_id=product_id)
+#         self.cart.products.remove(product)
+#         self.cart.save()
+#         return self.cart
     
-    def __str__(self):
-        return self.user.username 
+#     def get_cart(self):
+#         return self.cart
+    
+#     def get_total(self):
+#         total = 0
+#         for product in self.cart.products.all():
+#             total += product.price
+#         return total
+    
+#     def __str__(self):
+#         return self.user.username 
 class Cart(models.Model):
     cart_id = models.AutoField(primary_key=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     created_on = models.DateTimeField()
     
 class ProductInCart(models.Model):
@@ -100,9 +111,9 @@ class Order(models.Model):
         (3, 'Shipped'),
         (4, 'Delivered'),
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     status = models.IntegerField(choices=status_choices, default=1)
     
 class Deal(models.Model):
-    user = models.ManyToManyField(User)
+    user = models.ManyToManyField(CustomUser)
     deal_name = models.CharField(max_length=250)
