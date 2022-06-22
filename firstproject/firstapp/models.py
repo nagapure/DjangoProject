@@ -99,6 +99,10 @@ class Seller(CustomUser):
     
     def sell(self):
         print("I can sell")
+    
+    @property
+    def showAdditional(self):
+        return self.selleradditional
         
         
 class Customer(CustomUser):
@@ -110,7 +114,9 @@ class Customer(CustomUser):
     def buy(self):
         print("I can buy")
         
-        
+    @property
+    def showAdditional(self):
+        return self.customeradditional  
 
 
 
