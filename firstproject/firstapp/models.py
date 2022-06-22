@@ -11,12 +11,47 @@ from .managers import CustomUserManager
 from django.contrib.auth.models import PermissionsMixin
 
 
+
+# class UserType(models.Model):
+#     CUSTOMER = 1
+#     SELLER =2
+#     TYPE_CHOICES = (
+#         (SELLER, 'Seller'),
+#         (CUSTOMER, 'Customer'),
+#     )
+
+#     id = models.PositiveIntegerField(primary_key=True, choices=TYPE_CHOICES)
+#     def __str__(self):
+#         return self.get_id_display()
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     # username = None
     email = models.EmailField(_('email address'),unique=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
+    
+    # This is the first option
+    # is_customer = models.BooleanField(default=True)
+    # is_seller = models.BooleanField(default=False)
+    
+    # This is an second option 
+    # type = (
+    #     (1, 'seller'),
+    #     (2, 'customer'),
+    # )
+    # user_type = models.IntegerField(choices=type, default=2)
+    
+    # usertype = models.ManyToManyField(UserType)
+    
+    class Types(models.TextChoices):
+        SELLER = "Seller", "SELLER"
+        CUSTOMER = "Customer", "CUSTOMER"
+    
+    default_type = Types.CUSTOMER
+    
+    type = models.CharField(_('Type'), max_length=255, choices=Types.choices, default=default_type)
+    
+    
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -25,8 +60,57 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     
     def __str__(self):
         return self.email
+    
+    # if not the code below then taking default value in User model not in proxy models
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.type = self.default_type
+        return super().save(*args, **kwargs)
 
 
+class CustomerAdditional(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    address = models.CharField(max_length=1000)
+
+
+class SellerAdditional(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    gst = models.CharField(max_length=15)
+    warehouse_location = models.CharField(max_length=1000)
+
+
+
+# Model Managers for proxy models
+class SellerManager(models.Manager):
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).filter(type= CustomUser.Types.SELLER)
+    
+class CustomerManager(models.Manager):
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).filter(type= CustomUser.Types.CUSTOMER)
+    
+
+# Proxy models they do not create separate table
+class Seller(CustomUser):
+    default_type = CustomUser.Types.SELLER
+    objects = SellerManager()
+    class Meta:
+        proxy = True
+    
+    def sell(self):
+        print("I can sell")
+        
+        
+class Customer(CustomUser):
+    default_type = CustomUser.Types.SELLER
+    objects = CustomerManager()
+    class Meta:
+        proxy = True
+        
+    def buy(self):
+        print("I can buy")
+        
+        
 
 
 

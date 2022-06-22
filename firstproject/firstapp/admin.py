@@ -5,8 +5,7 @@ from django.contrib.auth.models import User
 from .forms import CustomUserChangeForm, CustomUserCreationsForm
 
 # Register your models here.
-from .models import  Cart, CustomUser, Deal, Product, ProductInCart, Order
-
+from .models import  Cart, CustomUser, Customer, Deal, Product, ProductInCart, Order, Seller
 
 class CustomUserAdmin(UserAdmin):
     add_form: CustomUserCreationsForm
@@ -15,8 +14,8 @@ class CustomUserAdmin(UserAdmin):
     list_display = ('email','is_staff', 'is_active')
     list_filter = ('email', 'is_staff', 'is_active')
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        ('Permissions', {'fields': ('is_staff', 'is_active')}),
+        (None, {'fields': ('email', 'password',)}),
+        ('Permissions', {'fields': ('is_staff', 'is_active', 'is_customer', 'is_seller')}),
     )
     add_fieldsets = (
         (None, {
@@ -116,3 +115,7 @@ admin.site.register(Product)
 admin.site.register(ProductInCart)
 admin.site.register(Order)
 admin.site.register(Deal, DealAdmin)
+# admin.site.register(UserType)
+admin.site.register(Customer)
+admin.site.register(Seller)
+
